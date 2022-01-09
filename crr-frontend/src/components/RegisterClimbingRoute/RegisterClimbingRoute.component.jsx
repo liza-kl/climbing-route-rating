@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import QRCodeComponent from "../QRCode/QRCode.component";
 import Button from '@mui/material/Button';
 import axios from "axios"
+import {Stack} from "@mui/material";
 
 const RegisterClimbingRouteComponent = () => {
     const [gyms,setGyms] = useState([]);
@@ -27,6 +28,8 @@ const RegisterClimbingRouteComponent = () => {
     }
     return(
         <form onSubmit={handleSubmit}>
+        <Stack spacing={2} mr={2} ml={2}>
+
         <h2>Register Your Climbing Route!</h2>
         <select value={selectedGym} onChange={(event) => setSelectedGym(event.target.value)}>
             <option value={0}>Select Your Gym</option>
@@ -37,6 +40,7 @@ const RegisterClimbingRouteComponent = () => {
             <input type="submit" value="Submit" />
             <Button variant="contained" id="submit-button" >Submit</Button>
             <QRCodeComponent link="www.google.com"/>
+        </Stack>
         </form>
     );
 }
