@@ -9,8 +9,8 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 const RegisterClimbingRouteComponent = () => {
     const [qrCodeReady,setQrCodeStatus] = useState(false);
     const [routeName,setRouteName] = useState('');
-    const [token, setToken] = useState(null);
-    const [difficulty, setDifficulty] = useState(null);
+    const [token, setToken] = useState('');
+    const [difficulty, setDifficulty] = useState('');
     const captchaRef = useRef(null);
 
     /**
@@ -31,7 +31,7 @@ const RegisterClimbingRouteComponent = () => {
      * Returns the generated route_id for the upcoming QR-Code
      */
     const handleSubmit = (event) => {
-       return axios.post('https://api.plutodev.de/crr/routes', {
+        axios.post('https://api.plutodev.de/crr/routes', {
             gym_id: '1',
             name: routeName.toString(),
             difficulty: difficulty.toString(),
