@@ -1,45 +1,70 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import QRCodeComponent from "../QRCode/QRCode.component";
 import Button from '@mui/material/Button';
-import axios from "axios"
-import {Stack} from "@mui/material";
+import {Stack, TextField} from "@mui/material";
+import SelectClimbingGym from "../SelectClimbingGym/SelectClimbingGym.component";
+import axios from "axios";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const RegisterClimbingRouteComponent = () => {
-    const [gyms,setGyms] = useState([]);
-    const [selectedGym, setSelectedGym] = useState(0)
-    const getClimbingGyms = () =>
-        {
-            return axios.get("https://api.plutodev.de/crr/gyms")
-                .then((response) => {
-                    setGyms(response.data)
-                })
-        }
+    const [qrCodeReady,setQrCodeStatus] = useState(false);
+    const [routeName,setRouteName] = useState('');
+    const [token, setToken] = useState(null);
+    const [difficulty, setDifficulty] = useState(null);
+    const captchaRef = useRef(null);
+
+    /**
+     * Configurations that the hcaptcha loads correctly
+     */
+    const onLoad = () => {
+        captchaRef.current.execute();
+    };
 
     useEffect(() => {
-        getClimbingGyms()
-    }, []);
 
-    const listOfGyms = gyms.map((gym) =>
-        <option key={gym.gym_id} value={gym.gym_id}>{gym.name}</option>
-    );
+        if (token)
+            console.log(`hCaptcha Token: ${token}`);
 
+    }, [token]);
+
+    /**
+     * Returns the generated route_id for the upcoming QR-Code
+     */
     const handleSubmit = (event) => {
-        event.preventDefault();
+       return axios.post('https://api.plutodev.de/crr/routes', {
+            gym_id: '1',
+            name: routeName.toString(),
+            difficulty: difficulty.toString(),
+            hcaptcha_response: token.toString()
+        })
+            .then(function (response) {
+                setQrCodeStatus(true)
+                console.log(response.route_id);
+                event.preventDefault();
+
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
     }
+
     return(
-        <form onSubmit={handleSubmit}>
-        <Stack spacing={2} mr={2} ml={2}>
+        <form onSubmit={(e) => handleSubmit(e)}>
+        <Stack spacing={2} mr={2} ml={2} justifyContent="center">
 
         <h2>Register Your Climbing Route!</h2>
-        <select value={selectedGym} onChange={(event) => setSelectedGym(event.target.value)}>
-            <option value={0}>Select Your Gym</option>
-            {listOfGyms}
-        </select>
-            <input type="text" placeholder="What is the name of the route"/>
-        <input type="text" placeholder="Difficulty of the route"/>
-            <input type="submit" value="Submit" />
-            <Button variant="contained" id="submit-button" >Submit</Button>
-            <QRCodeComponent link="www.google.com"/>
+            <SelectClimbingGym />
+            <TextField id="outlined-basic" label="Name of Route" variant="outlined" value={routeName} onChange={(e) => setRouteName(e.target.value)} />
+            <TextField id="outlined-basic" label="Difficulty of Route" variant="outlined" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} />
+            <HCaptcha
+                sitekey="7368614f-91e7-48b9-ac30-2375949c2b80"
+                onLoad={onLoad}
+                onVerify={setToken}
+                ref={captchaRef}
+            />
+            <Button variant="contained" id="submit-button" type="submit">Submit</Button>
+            {qrCodeReady ? <QRCodeComponent link="www.google.com"/> : undefined}
         </Stack>
         </form>
     );
