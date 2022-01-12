@@ -8,8 +8,9 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const RegisterClimbingRouteComponent = () => {
     const [qrCodeReady,setQrCodeStatus] = useState(false);
+    const [qrLink, setQRLink] = useState('')
     const [routeName,setRouteName] = useState('');
-    const [token, setToken] = useState('');
+    const [token, setToken] = useState(null);
     const [difficulty, setDifficulty] = useState('');
     const captchaRef = useRef(null);
 
@@ -20,8 +21,10 @@ const RegisterClimbingRouteComponent = () => {
         captchaRef.current.execute();
     };
 
+    /**
+     * Run Captcha only once
+     */
     useEffect(() => {
-
         if (token)
             console.log(`hCaptcha Token: ${token}`);
 
@@ -31,22 +34,22 @@ const RegisterClimbingRouteComponent = () => {
      * Returns the generated route_id for the upcoming QR-Code
      */
     const handleSubmit = (event) => {
-        axios.post('https://api.plutodev.de/crr/routes', {
-            gym_id: '1',
-            name: routeName.toString(),
-            difficulty: difficulty.toString(),
-            hcaptcha_response: token.toString()
-        })
-            .then(function (response) {
-                setQrCodeStatus(true)
-                console.log(response.route_id);
-                event.preventDefault();
+        event.preventDefault();
 
+        axios.post('https://api.plutodev.de/crr/routes',null, { params:{
+                gym_id: '1', //gave the values directly for testing @TODO pass correct props
+                name: routeName.toString(),
+                difficulty: difficulty.toString(),
+                hcaptcha_response: token
+            }})
+            .then(function (response) {
+                let route_id = response.data.route_id;
+                setQrCodeStatus(true)
+                setQRLink('https://api.plutodev.de/crr/routes/'+ route_id)
             })
             .catch(function (error) {
-                console.log(error);
+                console.log('An error occured: '+ error);
             });
-
     }
 
     return(
@@ -64,7 +67,7 @@ const RegisterClimbingRouteComponent = () => {
                 ref={captchaRef}
             />
             <Button variant="contained" id="submit-button" type="submit">Submit</Button>
-            {qrCodeReady ? <QRCodeComponent link="www.google.com"/> : undefined}
+            {qrCodeReady ? <QRCodeComponent link={qrLink}/> : console.log("QR Code couldn't be created")}
         </Stack>
         </form>
     );
